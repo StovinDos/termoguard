@@ -131,7 +131,6 @@ function ProductCard({ product, index }) {
               <div className="w-full h-0.5 bg-deep mt-1">
                 <motion.div
                   className="h-full"
-                  style={{ background: product.accentHex }}
                   animate={{ scaleX: [0.3, 0.9, 0.5, 0.7, 0.4] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   style={{ transformOrigin: 'left', background: product.accentHex }}
