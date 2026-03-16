@@ -3,21 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Lock } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { useCurrency } from '@/context/CurrencyContext';
 
 export default function CartDrawer() {
   const navigate = useNavigate();
   const { items, total, itemCount, isOpen, setIsOpen, removeItem, updateQty } = useCart();
-  const { formatPrice } = useCurrency();
 
   const handleCheckout = () => {
     setIsOpen(false);
     navigate('/checkout');
-  };
-
-  const handleBrowse = () => {
-    setIsOpen(false);
-    navigate('/store');
   };
 
   return (
@@ -67,7 +60,7 @@ export default function CartDrawer() {
                   </div>
                   <p className="font-display font-semibold text-sm text-ink-muted tracking-wide">Your cart is empty</p>
                   <button
-                    onClick={handleBrowse}
+                    onClick={() => setIsOpen(false)}
                     className="btn-ghost text-xs py-2.5 px-6"
                   >
                     Browse Products
@@ -91,7 +84,7 @@ export default function CartDrawer() {
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <p className="font-display font-semibold text-sm text-ink-primary truncate">{item.name}</p>
-                      <p className="font-mono text-xs text-ink-muted mt-0.5">{formatPrice(item.price)}</p>
+                      <p className="font-mono text-xs text-ink-muted mt-0.5">${item.price}</p>
 
                       {/* Qty controls */}
                       <div className="flex items-center gap-3 mt-3">
@@ -111,7 +104,7 @@ export default function CartDrawer() {
                           </button>
                         </div>
                         <span className="font-display font-bold text-sm text-cyan ml-auto">
-                          {formatPrice(item.price * item.quantity)}
+                          ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -135,7 +128,7 @@ export default function CartDrawer() {
                 <div className="space-y-2">
                   <div className="flex justify-between font-mono text-xs text-ink-secondary">
                     <span>Subtotal</span>
-                    <span>{formatPrice(total)}</span>
+                    <span>${total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-mono text-xs text-ink-secondary">
                     <span>Shipping</span>
@@ -144,7 +137,7 @@ export default function CartDrawer() {
                   <div className="h-px bg-[rgba(0,245,212,0.08)]" />
                   <div className="flex justify-between font-display font-bold text-ink-primary">
                     <span className="text-sm tracking-wider">Total</span>
-                    <span className="text-xl text-cyan">{formatPrice(total)}</span>
+                    <span className="text-xl text-cyan">${total.toFixed(2)}</span>
                   </div>
                 </div>
 

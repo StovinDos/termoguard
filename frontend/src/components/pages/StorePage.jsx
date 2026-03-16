@@ -1,10 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Star, Shield, Zap, Check, Filter, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Star, Shield, Zap, Check, Filter } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { useCurrency } from '@/context/CurrencyContext';
 
 // ── Product data ───────────────────────────────────────────────────────────
 const PRODUCTS = [
@@ -71,13 +69,14 @@ const PRODUCTS = [
 ];
 
 // ── Product card ───────────────────────────────────────────────────────────
-function ProductCard({ product, index, onAddToCart, formatPrice }) {
+function ProductCard({ product, index }) {
+  const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
 
   const handleAdd = async () => {
     setAdding(true);
     await new Promise(r => setTimeout(r, 400));
-    onAddToCart(product);
+    addItem(product);
     setAdding(false);
   };
 
@@ -132,6 +131,7 @@ function ProductCard({ product, index, onAddToCart, formatPrice }) {
               <div className="w-full h-0.5 bg-deep mt-1">
                 <motion.div
                   className="h-full"
+                  style={{ background: product.accentHex }}
                   animate={{ scaleX: [0.3, 0.9, 0.5, 0.7, 0.4] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   style={{ transformOrigin: 'left', background: product.accentHex }}
@@ -177,10 +177,10 @@ function ProductCard({ product, index, onAddToCart, formatPrice }) {
         <div className="flex items-center justify-between">
           <div>
             <div className={`font-display font-black text-2xl ${textColor}`}>
-              {formatPrice(product.price)}
+              ${product.price}
             </div>
             {product.originalPrice && (
-              <div className="font-mono text-xs text-ink-muted line-through">{formatPrice(product.originalPrice)}</div>
+              <div className="font-mono text-xs text-ink-muted line-through">${product.originalPrice}</div>
             )}
           </div>
           <button
@@ -210,34 +210,10 @@ function ProductCard({ product, index, onAddToCart, formatPrice }) {
 
 // ── Store Page ─────────────────────────────────────────────────────────────
 export default function StorePage() {
-  const { user, isAuthenticated } = useAuth();
-  const { addItem } = useCart();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [filter, setFilter] = useState('all');
-  const { currency, setCurrency, formatPrice, currencies } = useCurrency();
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-  const currencyRef = useRef(null);
-
-  useEffect(() => {
-    if (!currencyOpen) return;
-    const handleOutside = (e) => {
-      if (currencyRef.current && !currencyRef.current.contains(e.target)) {
-        setCurrencyOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [currencyOpen]);
 
   const filtered = filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.color === filter);
-
-  const handleAddToCart = (product) => {
-    if (!isAuthenticated) {
-      navigate('/auth?redirect=/store');
-      return;
-    }
-    addItem(product);
-  };
 
   return (
     <div className="min-h-screen bg-void pt-[72px]">
@@ -259,13 +235,13 @@ export default function StorePage() {
                 Choose Your <span className="text-cyan text-glow-cyan">Guardian</span>
               </h1>
               <p className="text-ink-secondary mt-3 max-w-lg">
-                {user && <>Welcome back, <span className="text-ink-primary">{user.firstName}</span>. </>}
+                Welcome back, <span className="text-ink-primary">{user?.firstName}</span>. 
                 Every TermoGuard includes free shipping, a 30-day return window, and lifetime firmware updates.
               </p>
             </motion.div>
 
-            {/* Filter + Currency */}
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Filter */}
+            <div className="flex items-center gap-2">
               <Filter size={14} className="text-ink-muted" />
               {[
                 { key: 'all',       label: 'All' },
@@ -285,49 +261,15 @@ export default function StorePage() {
                   {opt.label}
                 </button>
               ))}
-
-              {/* Currency switcher */}
-              <div ref={currencyRef} className="relative ml-2">
-                <button
-                  onClick={() => setCurrencyOpen(o => !o)}
-                  aria-haspopup="listbox"
-                  aria-expanded={currencyOpen}
-                  aria-label={`Currency: ${currency.label}`}
-                  className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase px-3 py-2
-                             border border-[rgba(0,245,212,0.12)] text-ink-muted hover:text-ink-secondary
-                             hover:border-cyan/30 transition-all duration-200"
-                >
-                  {currency.label}
-                  <ChevronDown size={10} className={`transition-transform duration-200 ${currencyOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {currencyOpen && (
-                  <ul role="listbox" aria-label="Select currency" className="absolute right-0 top-full mt-1 w-24 bg-deep border border-[rgba(0,245,212,0.15)] z-10">
-                    {currencies.map(c => (
-                      <li key={c.code} role="option" aria-selected={currency.code === c.code}>
-                        <button
-                          onClick={() => { setCurrency(c); setCurrencyOpen(false); }}
-                          className={`w-full text-left font-mono text-[10px] tracking-widest uppercase px-3 py-2.5
-                                      transition-colors duration-150
-                                      ${currency.code === c.code
-                                        ? 'text-cyan bg-cyan/5'
-                                        : 'text-ink-muted hover:text-ink-secondary hover:bg-panel/40'}`}
-                        >
-                          {c.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Products grid */}
-      <div id="shop-grid" className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />)}
+          {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
         </div>
       </div>
 
