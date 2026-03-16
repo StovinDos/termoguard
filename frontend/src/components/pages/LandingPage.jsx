@@ -156,6 +156,55 @@ function DevicePlaceholder() {
 export default function LandingPage() {
   const navigate = useNavigate();
 
+  // ── Live temperature stream ───────────────────────────────────────────────
+  const [liveTemp, setLiveTemp] = useState(() => parseFloat((Math.random() * 10 + 18).toFixed(1)));
+  const [tempPulse, setTempPulse] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveTemp(prev => {
+        const delta = (Math.random() - 0.5);
+        const clamped = Math.max(-0.5, Math.min(0.5, delta));
+        return parseFloat(Math.max(18, Math.min(28, prev + clamped)).toFixed(1));
+      });
+      setTempPulse(true);
+      setTimeout(() => setTempPulse(false), 600);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── Steps data ────────────────────────────────────────────────────────────
+  const steps = [
+    {
+      icon: Thermometer,
+      step: '01',
+      title: 'Continuous Sampling',
+      desc: 'The onboard sensor polls ambient temperature every second using a calibrated hysteresis algorithm to filter noise.',
+      extra: 'Uses a dual-threshold hysteresis window to reject transient spikes, ensuring each reported reading reflects a genuine thermal state rather than momentary electrical artefacts.',
+    },
+    {
+      icon: Waves,
+      step: '02',
+      title: 'Real-Time Transmission',
+      desc: 'Data is streamed instantly to your connected platform — no buffering, no latency, no memory accumulation.',
+      extra: 'Leverages a lightweight binary frame format over TLS 1.3. Each packet is acknowledged within 50 ms, and missed frames are automatically retransmitted without disrupting the live stream.',
+    },
+    {
+      icon: BarChart2,
+      step: '03',
+      title: 'Intelligent Alerting',
+      desc: 'Custom thresholds trigger instant alerts before temperature anomalies cause equipment failure or safety hazards.',
+      extra: 'Supports multi-channel delivery: push notifications, SMS, and email. Alert rules can be combined with AND/OR logic and per-zone cooldown periods to suppress duplicate notifications.',
+    },
+    {
+      icon: Lock,
+      step: '04',
+      title: 'Secure & Certified',
+      desc: 'End-to-end encrypted data transmission with CE, RoHS, and industrial-grade certifications for every deployment.',
+      extra: 'All sensor data is signed with device-specific ECDSA keys provisioned at the factory. Certificates are rotated automatically and revokable remotely, keeping your fleet secure without manual intervention.',
+    },
+  ];
+
   const features = [
     {
       icon: Cpu,
@@ -294,18 +343,20 @@ export default function LandingPage() {
         </div>
 
         {/* Scroll cue */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        <motion.button
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
+          onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+          aria-label="Scroll down to features"
         >
           <span className="font-mono text-[10px] text-ink-muted tracking-widest uppercase">Discover</span>
           <ChevronDown size={16} className="text-cyan/50" />
-        </motion.div>
+        </motion.button>
       </section>
 
       {/* ── STATS BAR ────────────────────────────────────────────────────── */}
-      <section className="border-y border-[rgba(0,245,212,0.1)] bg-deep/40">
+      <section id="features" className="border-y border-[rgba(0,245,212,0.1)] bg-deep/40">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
             <AnimatedStat value="0.1" suffix="°C" label="Accuracy Threshold" />
@@ -359,12 +410,7 @@ export default function LandingPage() {
                 Sense. Stream. <span className="text-cyan">Protect.</span>
               </h2>
               <div className="space-y-8">
-                {[
-                  { icon: Thermometer, step: '01', title: 'Continuous Sampling', desc: 'The onboard sensor polls ambient temperature every second using a calibrated hysteresis algorithm to filter noise.' },
-                  { icon: Waves, step: '02', title: 'Real-Time Transmission', desc: 'Data is streamed instantly to your connected platform — no buffering, no latency, no memory accumulation.' },
-                  { icon: BarChart2, step: '03', title: 'Intelligent Alerting', desc: 'Custom thresholds trigger instant alerts before temperature anomalies cause equipment failure or safety hazards.' },
-                  { icon: Lock, step: '04', title: 'Secure & Certified', desc: 'End-to-end encrypted data transmission with CE, RoHS, and industrial-grade certifications for every deployment.' },
-                ].map(({ icon: Icon, step, title, desc }) => (
+                {steps.map(({ icon: Icon, step, title, desc, extra }) => (
                   <div key={step} className="flex gap-6 group">
                     <div className="flex-shrink-0 w-10 h-10 border border-cyan/20 flex items-center justify-center
                                     group-hover:border-cyan/50 transition-colors">
@@ -374,6 +420,12 @@ export default function LandingPage() {
                       <div className="font-mono text-[10px] text-ink-muted tracking-widest mb-1">STEP {step}</div>
                       <h3 className="font-display font-semibold text-sm text-ink-primary mb-2">{title}</h3>
                       <p className="text-ink-secondary text-sm leading-relaxed">{desc}</p>
+                      {/* Extra info revealed on hover */}
+                      <div className="overflow-hidden max-h-0 group-hover:max-h-48 transition-all duration-500 ease-in-out">
+                        <p className="text-cyan/70 text-xs leading-relaxed mt-2 pt-2 border-t border-cyan/10">
+                          {extra}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -382,6 +434,28 @@ export default function LandingPage() {
 
             {/* Visual diagram placeholder */}
             <div className="relative">
+              {/* Live data reading */}
+              <div className="glass clip-corner px-6 py-4 mb-4 flex items-center justify-between">
+                <div>
+                  <p className="font-mono text-[10px] text-ink-muted tracking-widest uppercase mb-1">Live Sensor Reading</p>
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      id="temp-display"
+                      className={`font-display font-black text-3xl text-cyan transition-all duration-300 ${tempPulse ? 'scale-110 text-glow-cyan' : ''}`}
+                      style={{ textShadow: '0 0 20px rgba(0,245,212,0.6)', display: 'inline-block' }}
+                    >
+                      {liveTemp}
+                    </span>
+                    <span className="font-mono text-xs text-ink-muted">°C</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse"
+                       style={{ boxShadow: '0 0 6px rgba(57,255,20,0.8)' }} />
+                  <span className="font-mono text-[10px] text-neon-green tracking-widest">LIVE</span>
+                </div>
+              </div>
+
               <div className="glass clip-corner p-10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-30" />
                 <div className="relative z-10 space-y-4">

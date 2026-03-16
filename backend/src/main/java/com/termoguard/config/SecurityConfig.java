@@ -24,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,15 +44,16 @@ public class SecurityConfig {
     private final UserDetailsService      userDetailsService;
 
     @Value("${app.cors.allowed-origins}")
-    private String allowedOriginsRaw;
+    private List<String> allowedOrigins;
 
-    // ── Password Encoder ─────────────────────────────────────────────────
+        // ── Password Encoder ─────────────────────────────────────────────────
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         // BCrypt with strength 12 — good balance of security vs CPU cost
         return new BCryptPasswordEncoder(12);
     }
+
 
     // ── Authentication Provider ──────────────────────────────────────────
 
@@ -77,7 +77,6 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> allowedOrigins = Arrays.asList(allowedOriginsRaw.split(","));
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -2,6 +2,7 @@ package com.termoguard.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.termoguard.dto.AuthDto.*;
+import com.termoguard.security.JwtTokenProvider;
 import com.termoguard.service.AuthService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
 
-    @Autowired MockMvc       mvc;
-    @Autowired ObjectMapper  mapper;
-    @MockBean  AuthService   authService;
+    @Autowired MockMvc             mvc;
+    @Autowired ObjectMapper        mapper;
+    @MockBean  AuthService         authService;
+    @MockBean  JwtTokenProvider    tokenProvider;
 
     private final UserDto mockUser = UserDto.builder()
         .id(1L).firstName("Jane").lastName("Doe")

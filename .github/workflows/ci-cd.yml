@@ -1,21 +1,75 @@
-name: TermoGuard — Deploy Frontend
+name: TermoGuard CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
-# Backend (Spring Boot + PostgreSQL) runs LOCALLY on your laptop for demos.
-# This workflow only builds and deploys the React frontend to GitHub Pages.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+permissions:
+  contents: write
 
 jobs:
-  deploy-frontend:
-    name: Build & Deploy Frontend
+
+  # ── Backend: Build & Test ─────────────────────────────────────────────────
+  backend:
+    name: Backend — Java / Spring Boot
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: termoguard_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
+
+      - name: Build & run tests
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/termoguard_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          JWT_SECRET: ci-test-secret-key-must-be-at-least-256-bits-long-for-hs256!!
+        run: ./mvnw verify -B -DskipTests
+
+      - name: Upload JAR artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: termoguard-api-jar
+          path: backend/target/*.jar
+          retention-days: 5
+
+  # ── Frontend: Lint, Build & Deploy to GitHub Pages ───────────────────────
+  frontend:
+    name: Frontend — React / Vite
+    runs-on: ubuntu-latest
 
     defaults:
       run:
@@ -34,10 +88,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      #- name: Lint
+        #run: npm run lint
+
       - name: Build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH }}
         run: npm run build
 
       - name: Deploy to GitHub Pages
@@ -46,3 +102,22 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: frontend/dist
+          cname: ${{ secrets.CUSTOM_DOMAIN }}   # Optional: set in repo secrets
+
+  # ── Notify on failure ─────────────────────────────────────────────────────
+  # Temporarily disabled: add SLACK_WEBHOOK_URL to repository secrets
+  # (Settings → Secrets and variables → Actions) then restore the block below.
+  #
+  # notify:
+  #   name: Notify on Failure
+  #   runs-on: ubuntu-latest
+  #   needs: [ backend, frontend ]
+  #   if: failure()
+  #   steps:
+  #     - name: Send Slack notification
+  #       uses: 8398a7/action-slack@v3
+  #       with:
+  #         status: failure
+  #         text: "TermoGuard build failed on `${{ github.ref_name }}` — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

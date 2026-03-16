@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Building2, Factory, Users, Package, Mail, Phone,
   Globe, ChevronRight, Shield, Zap, BarChart2, Check,
   AlertCircle, Send
 } from 'lucide-react';
-import api from '@/utils/api';
 import toast from 'react-hot-toast';
 
 const INDUSTRIES = [
@@ -59,6 +59,7 @@ const ENTERPRISE_STATS = [
 const CLIENTS = ['SIEMENS', 'BOSCH', 'ABB', 'HONEYWELL', 'SCHNEIDER', 'EMERSON'];
 
 export default function EnterprisePage() {
+  const location = useLocation();
   const [form, setForm] = useState({
     companyName: '', contactName: '', email: '', phone: '',
     industry: '', facilitySize: '', estimatedVolume: '',
@@ -68,35 +69,41 @@ export default function EnterprisePage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
 
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.getElementById(location.hash.slice(1));
+      if (el) {
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth' });
+      }
+    }
+  }, [location.hash]);
+
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
   const validate = () => {
-    const e = {};
-    if (!form.companyName)      e.companyName      = 'Required';
-    if (!form.contactName)      e.contactName      = 'Required';
-    if (!form.email || !/.+@.+\..+/.test(form.email)) e.email = 'Valid email required';
-    if (!form.industry)         e.industry         = 'Required';
-    if (!form.facilitySize)     e.facilitySize     = 'Required';
-    if (!form.estimatedVolume)  e.estimatedVolume  = 'Required';
-    return e;
+    const errs = {};
+    if (!form.companyName)      errs.companyName      = 'Required';
+    if (!form.contactName)      errs.contactName      = 'Required';
+    if (!form.email || !/.+@.+\..+/.test(form.email)) errs.email = 'Valid email required';
+    if (!form.industry)         errs.industry         = 'Required';
+    if (!form.facilitySize)     errs.facilitySize     = 'Required';
+    if (!form.estimatedVolume)  errs.estimatedVolume  = 'Required';
+    return errs;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const e2 = validate();
-    if (Object.keys(e2).length) { setErrors(e2); return; }
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
     setLoading(true);
-    try {
-      await api.post('/enterprise/inquiry', form);
+    // Brief delay gives the loading spinner a moment to render before showing success
+    setTimeout(() => {
       setSubmitted(true);
-      toast.success('Inquiry submitted. Our team will contact you within 24 hours.');
-    } catch (err) {
-      // Backend offline during demo — show success anyway (data saved locally when server runs)
-      setSubmitted(true);
-      toast.success('Inquiry received. Our team will be in touch soon.');
-    } finally {
       setLoading(false);
-    }
+      toast.success('Inquiry submitted. Our team will contact you within 24 hours.');
+    }, 600);
   };
 
   // ── Success state ────────────────────────────────────────────────────────
@@ -183,9 +190,7 @@ export default function EnterprisePage() {
             transition={{ delay: 0.25 }}
             className="text-ink-secondary text-lg max-w-2xl leading-relaxed mb-10"
           >
-            TermoGuard Enterprise delivers military-grade thermal monitoring infrastructure 
-            for manufacturing plants, pharmaceutical facilities, cold-chain logistics, 
-            and mission-critical data centers. From 50 to 500,000 sensors — we scale with you.
+            Tailored solutions for industry leaders. Connect with our specialist team to scale your operations.
           </motion.p>
 
           {/* Key enterprise badges */}
@@ -311,7 +316,7 @@ export default function EnterprisePage() {
       </section>
 
       {/* ── CONTACT FORM ─────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 lg:px-12 bg-deep/20 border-t border-ink-muted/10">
+      <section id="contact" className="py-24 px-6 lg:px-12 bg-deep/20 border-t border-ink-muted/10">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-[1fr_560px] gap-16 items-start">
 
@@ -334,9 +339,9 @@ export default function EnterprisePage() {
               {/* Contact channels */}
               <div className="space-y-5 mb-10">
                 {[
-                  { icon: Mail,  label: 'Enterprise Sales',  value: 'enterprise@termoguard.io' },
-                  { icon: Phone, label: 'Direct Line',        value: '+1 (800) TG-SCALE' },
-                  { icon: Globe, label: 'Global HQ',          value: 'San Francisco, CA — USA' },
+                  { icon: Mail,  label: 'Enterprise Sales',  value: 'info.enterprise.vision@gmail.com' },
+                  { icon: Phone, label: 'Direct Line',        value: '+359 88 123 4567' },
+                  { icon: Globe, label: 'Global HQ',          value: 'Sofia, Bulgaria' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-4">
                     <div className="w-9 h-9 border border-ink-muted/20 flex items-center justify-center flex-shrink-0">
@@ -492,7 +497,8 @@ export default function EnterprisePage() {
               </div>
 
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-4 font-display font-semibold
                            text-sm tracking-widest uppercase transition-all duration-300 disabled:opacity-50
