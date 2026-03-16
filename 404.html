@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TermoGuard</title>
+  <script>
+    // GitHub Pages SPA redirect trick.
+    // Stores the full path in sessionStorage, then redirects to index.html.
+    // index.html picks it up and replaces the history entry.
+    var l = window.location;
+    sessionStorage.redirect = l.href;
+    l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + l.pathname.split('/').slice(0, 1 + 1).join('/') + '/?p=1');
+  </script>
+</head>
+<body></body>
+</html>
