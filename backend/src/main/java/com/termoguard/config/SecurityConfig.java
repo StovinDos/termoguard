@@ -46,14 +46,6 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    // ── Password Encoder ─────────────────────────────────────────────────
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // BCrypt with strength 12 — good balance of security vs CPU cost
-        return new BCryptPasswordEncoder(12);
-    }
-
     // ── Authentication Provider ──────────────────────────────────────────
 
     @Bean
