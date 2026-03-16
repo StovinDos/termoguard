@@ -335,8 +335,8 @@ export default function EnterprisePage() {
               <div className="space-y-5 mb-10">
                 {[
                   { icon: Mail,  label: 'Enterprise Sales',  value: 'enterprise@termoguard.io' },
-                  { icon: Phone, label: 'Direct Line',        value: '+1 (800) TG-SCALE' },
-                  { icon: Globe, label: 'Global HQ',          value: 'San Francisco, CA — USA' },
+                  { icon: Phone, label: 'Direct Line',        value: '+359 2 491 2201' },
+                  { icon: Globe, label: 'Global HQ',          value: 'София, България — EU' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-4">
                     <div className="w-9 h-9 border border-ink-muted/20 flex items-center justify-center flex-shrink-0">

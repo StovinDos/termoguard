@@ -60,7 +60,7 @@ export default function CartDrawer() {
                   </div>
                   <p className="font-display font-semibold text-sm text-ink-muted tracking-wide">Your cart is empty</p>
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => { setIsOpen(false); navigate('/store'); }}
                     className="btn-ghost text-xs py-2.5 px-6"
                   >
                     Browse Products
