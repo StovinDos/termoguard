@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
 
   # ── Backend: Build & Test ─────────────────────────────────────────────────
@@ -41,6 +44,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
 
       - name: Build & run tests
         env:
@@ -97,17 +103,19 @@ jobs:
           cname: ${{ secrets.CUSTOM_DOMAIN }}   # Optional: set in repo secrets
 
   # ── Notify on failure ─────────────────────────────────────────────────────
-  notify:
-    name: Notify on Failure
-    runs-on: ubuntu-latest
-    needs: [ backend, frontend ]
-    if: failure()
-    steps:
-      - name: Send Slack notification
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: failure
-          text: "TermoGuard build failed on `${{ github.ref_name }}` — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  # Temporarily disabled: add SLACK_WEBHOOK_URL to repository secrets
+  # (Settings → Secrets and variables → Actions) then restore the block below.
+  #
+  # notify:
+  #   name: Notify on Failure
+  #   runs-on: ubuntu-latest
+  #   needs: [ backend, frontend ]
+  #   if: failure()
+  #   steps:
+  #     - name: Send Slack notification
+  #       uses: 8398a7/action-slack@v3
+  #       with:
+  #         status: failure
+  #         text: "TermoGuard build failed on `${{ github.ref_name }}` — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
