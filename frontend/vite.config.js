@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
   base: '/termoguard/',
+  plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
@@ -23,9 +23,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor:  ['react', 'react-dom', 'react-router-dom'],
-          motion:  ['framer-motion'],
-          query:   ['@tanstack/react-query'],
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+          query:  ['@tanstack/react-query'],
         },
       },
     },

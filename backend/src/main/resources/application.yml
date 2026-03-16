@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/termoguard}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:159357}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update          # Use 'validate' in production + Flyway
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -26,7 +26,6 @@ spring:
         format_sql: true
         default_schema: public
 
-  # Optional: Jackson config
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -36,15 +35,12 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:TermoGuardSuperSecretKey2024MustBe256BitsOrMoreForHS256Algorithm!!}
-    expiration: ${JWT_EXPIRATION:86400000}   # 24 hours in ms
-    refresh-expiration: 604800000            # 7 days in ms
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: 604800000
 
-# ── CORS (allow Vite dev + GitHub Pages) ──────────────────────────────────
+# ── CORS — inline list so it is always resolved ───────────────────────────
   cors:
-    allowed-origins:
-      - http://localhost:3000
-      - http://localhost:5173
-      - https://${GITHUB_PAGES_DOMAIN:your-org.github.io}
+    allowed-origins: "http://localhost:3000,http://localhost:5173,https://stovindos.github.io"
 
 # ── Logging ───────────────────────────────────────────────────────────────
 logging:

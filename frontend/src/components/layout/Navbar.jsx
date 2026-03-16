@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, LogOut, User } from 'lucide-react';
+import { ShoppingCart, Menu, X, LogOut, User, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
   { label: 'Product',    href: '/' },
-  { label: 'Store',      href: '/store' },
+  { label: 'Store',      href: '/store',      protected: true },
   { label: 'Enterprise', href: '/enterprise' },
-  { label: 'About Us',   href: '/enterprise#contact' },
 ];
 
 export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, demoMode } = useAuth();
   const { itemCount, setIsOpen } = useCart();
-  const [scrolled,  setScrolled]  = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled,    setScrolled]   = useState(false);
+  const [mobileOpen,  setMobileOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -28,7 +27,11 @@ export default function Navbar() {
 
   const handleNavClick = (link) => {
     setMobileOpen(false);
-    navigate(link.href);
+    if (link.protected && !isAuthenticated) {
+      navigate(`/auth?redirect=${link.href}`);
+    } else {
+      navigate(link.href);
+    }
   };
 
   const handleLogout = () => {
@@ -61,6 +64,9 @@ export default function Navbar() {
                 className={`nav-link ${location.pathname === link.href ? 'active text-cyan' : ''}`}
               >
                 {link.label}
+                {link.protected && !isAuthenticated && (
+                  <span className="ml-1.5 text-[8px] text-ink-muted tracking-widest">[LOGIN]</span>
+                )}
               </button>
             </li>
           ))}
@@ -71,7 +77,19 @@ export default function Navbar() {
           {isAuthenticated ? (
             <>
               <div className="flex items-center gap-2 font-mono text-xs text-ink-secondary">
-                <User size={14} className="text-cyan" />
+                {/* Demo mode / live mode indicator */}
+                {demoMode ? (
+                  <span className="flex items-center gap-1.5 text-neon-amber">
+                    <WifiOff size={11} />
+                    <span className="text-[10px] tracking-widest">DEMO</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-neon-green">
+                    <Wifi size={11} />
+                    <span className="text-[10px] tracking-widest">LIVE</span>
+                  </span>
+                )}
+                <User size={14} className="text-cyan ml-1" />
                 <span>{user?.firstName}</span>
               </div>
               <button

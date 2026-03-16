@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, AlertCircle, WifiOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 function InputGroup({ label, icon: Icon, type = 'text', value, onChange, placeholder, error, suffix }) {
