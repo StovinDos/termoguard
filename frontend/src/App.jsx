@@ -49,15 +49,8 @@ function AppRoutes() {
         <Route path="/auth"       element={<AuthPage />} />
         <Route path="/enterprise" element={<EnterprisePage />} />
 
-        {/* Protected Routes (require login) */}
-        <Route
-          path="/store"
-          element={
-            <ProtectedRoute>
-              <StorePage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Store — publicly browsable; auth required only at purchase */}
+        <Route path="/store" element={<StorePage />} />
         <Route
           path="/checkout"
           element={

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Star, Shield, Zap, Check, Filter } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -69,14 +70,13 @@ const PRODUCTS = [
 ];
 
 // ── Product card ───────────────────────────────────────────────────────────
-function ProductCard({ product, index }) {
-  const { addItem } = useCart();
+function ProductCard({ product, index, onAddToCart }) {
   const [adding, setAdding] = useState(false);
 
   const handleAdd = async () => {
     setAdding(true);
     await new Promise(r => setTimeout(r, 400));
-    addItem(product);
+    onAddToCart(product);
     setAdding(false);
   };
 
@@ -209,10 +209,20 @@ function ProductCard({ product, index }) {
 
 // ── Store Page ─────────────────────────────────────────────────────────────
 export default function StorePage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { addItem } = useCart();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
 
   const filtered = filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.color === filter);
+
+  const handleAddToCart = (product) => {
+    if (!isAuthenticated) {
+      navigate('/auth?redirect=/store');
+      return;
+    }
+    addItem(product);
+  };
 
   return (
     <div className="min-h-screen bg-void pt-[72px]">
@@ -234,7 +244,7 @@ export default function StorePage() {
                 Choose Your <span className="text-cyan text-glow-cyan">Guardian</span>
               </h1>
               <p className="text-ink-secondary mt-3 max-w-lg">
-                Welcome back, <span className="text-ink-primary">{user?.firstName}</span>. 
+                {user && <>Welcome back, <span className="text-ink-primary">{user.firstName}</span>. </>}
                 Every TermoGuard includes free shipping, a 30-day return window, and lifetime firmware updates.
               </p>
             </motion.div>
@@ -268,7 +278,7 @@ export default function StorePage() {
       {/* Products grid */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} onAddToCart={handleAddToCart} />)}
         </div>
       </div>
 
