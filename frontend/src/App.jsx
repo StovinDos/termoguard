@@ -14,6 +14,7 @@ import StorePage      from '@/components/pages/StorePage';
 import CheckoutPage   from '@/components/pages/CheckoutPage';
 import EnterprisePage from '@/components/pages/EnterprisePage';
 import AboutPage      from '@/components/pages/AboutPage';
+import AccountPage    from '@/components/pages/AccountPage';
 import NotFoundPage   from '@/components/pages/NotFoundPage';
 
 // ─── Protected Route Guard ─────────────────────────────────────────────────
@@ -55,6 +56,14 @@ function AppRoutes() {
         <Route path="/store"      element={<StorePage />} />
 
         {/* Protected Routes (require login) */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/checkout"
           element={

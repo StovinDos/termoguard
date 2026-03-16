@@ -455,7 +455,7 @@ export default function EnterprisePage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <Field label="Phone Number">
                     <input
-                      type="tel" placeholder="+1 (555) 000-0000"
+                      type="tel" placeholder="+359 88 XXX XXXX"
                       value={form.phone} onChange={set('phone')}
                       className="input-field"
                     />
