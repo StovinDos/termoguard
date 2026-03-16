@@ -1,20 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Users, Target, Lightbulb, ArrowRight, Shield } from 'lucide-react';
-
-const TEAM = [
-  { initials: 'AV', name: 'Alexander Vasilev',  role: 'CEO & Co-Founder',          bio: 'Former embedded systems engineer with 12 years in industrial IoT.' },
-  { initials: 'MP', name: 'Maria Petrova',       role: 'CTO',                        bio: 'PhD in sensor engineering, pioneered the hysteresis algorithm at TU Sofia.' },
-  { initials: 'GD', name: 'Georgi Dimitrov',     role: 'Head of Hardware',           bio: 'Led thermal sensor R&D at Bosch before founding TermoGuard.' },
-  { initials: 'EI', name: 'Elena Ivanova',       role: 'Head of Enterprise Sales',   bio: '10+ years deploying industrial monitoring solutions across Europe.' },
-];
+import { MapPin, Phone, Mail, Target, Lightbulb, ArrowRight, Shield, Users } from 'lucide-react';
 
 const VALUES = [
-  { icon: Target,    title: 'Precision First',       desc: 'We never compromise on accuracy. Every product ships calibrated to ±0.1°C — that is our promise, not a marketing claim.' },
-  { icon: Lightbulb, title: 'Simplicity by Design',  desc: 'Complex sensor technology should feel effortless. We obsess over UX so our customers never have to think about the hardware.' },
-  { icon: Shield,    title: 'Built to Last',          desc: 'Our devices are engineered for decades of continuous operation. Quality over quantity, always.' },
-  { icon: Users,     title: 'People Over Profit',     desc: 'We are a small team from Sofia building tools we believe in. Every decision starts with what is right for our customers.' },
+  { icon: Target,    title: 'Precision First',      desc: 'We never compromise on accuracy. Every product ships calibrated to ±0.1°C — that is our promise, not a marketing claim.' },
+  { icon: Lightbulb, title: 'Simplicity by Design', desc: 'Complex sensor technology should feel effortless. We obsess over UX so our customers never have to think about the hardware.' },
+  { icon: Shield,    title: 'Built to Last',         desc: 'Our devices are engineered for decades of continuous operation. Quality over quantity, always.' },
+  { icon: Users,     title: 'People Over Profit',    desc: 'We are a small team from Sofia building tools we believe in. Every decision starts with what is right for our customers.' },
 ];
 
 export default function AboutPage() {
@@ -29,8 +22,7 @@ export default function AboutPage() {
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(0,245,212,0.05) 0%, transparent 70%)' }}
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 8, repeat: Infinity }}
         />
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -80,33 +72,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── TEAM ─────────────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 lg:px-12 border-t border-[rgba(0,245,212,0.08)] bg-deep/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="section-label block mb-4">The Team</span>
-            <h2 className="section-title">The People Behind the Sensor</h2>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {TEAM.map((member, i) => (
-              <motion.div key={member.name}
-                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="glass-hover p-6 text-center"
-              >
-                <div className="w-16 h-16 rounded-full bg-cyan/10 border border-cyan/20 flex items-center justify-center mx-auto mb-4"
-                     style={{ boxShadow: '0 0 20px rgba(0,245,212,0.1)' }}>
-                  <span className="font-display font-bold text-lg text-cyan">{member.initials}</span>
-                </div>
-                <h3 className="font-display font-bold text-sm text-ink-primary mb-1">{member.name}</h3>
-                <p className="font-mono text-[10px] text-cyan/70 tracking-widest uppercase mb-3">{member.role}</p>
-                <p className="text-ink-secondary text-xs leading-relaxed">{member.bio}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── HQ & CONTACT ─────────────────────────────────────────────────── */}
       <section className="py-20 px-6 lg:px-12 border-t border-[rgba(0,245,212,0.08)]">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
@@ -117,31 +82,11 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-6">
               {[
-                {
-                  icon: MapPin,
-                  label: 'Global Headquarters',
-                  value: 'бул. Витоша 89, ет. 4\n1000 София, България',
-                },
-                {
-                  icon: Phone,
-                  label: 'Main Office',
-                  value: '+359 2 491 2200',
-                },
-                {
-                  icon: Phone,
-                  label: 'Enterprise Sales',
-                  value: '+359 2 491 2201',
-                },
-                {
-                  icon: Mail,
-                  label: 'General Enquiries',
-                  value: 'hello@termoguard.io',
-                },
-                {
-                  icon: Mail,
-                  label: 'Enterprise',
-                  value: 'enterprise@termoguard.io',
-                },
+                { icon: MapPin, label: 'Global Headquarters', value: 'бул. Витоша 89, ет. 4\n1000 София, България' },
+                { icon: Phone,  label: 'Main Office',         value: '+359 88 491 2200' },
+                { icon: Phone,  label: 'Enterprise Sales',    value: '+359 88 491 2201' },
+                { icon: Mail,   label: 'General Enquiries',   value: 'hello@termoguard.gmail.com' },
+                { icon: Mail,   label: 'Enterprise',          value: 'enterprise@termoguard.gmail.com' },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-4">
                   <div className="w-9 h-9 border border-cyan/20 flex items-center justify-center flex-shrink-0">

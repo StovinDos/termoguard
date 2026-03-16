@@ -334,8 +334,8 @@ export default function EnterprisePage() {
               {/* Contact channels */}
               <div className="space-y-5 mb-10">
                 {[
-                  { icon: Mail,  label: 'Enterprise Sales',  value: 'enterprise@termoguard.io' },
-                  { icon: Phone, label: 'Direct Line',        value: '+359 2 491 2201' },
+                  { icon: Mail,  label: 'Enterprise Sales',  value: 'enterprise@termoguard.gmail.com' },
+                  { icon: Phone, label: 'Direct Line',        value: '+359 88 491 2201' },
                   { icon: Globe, label: 'Global HQ',          value: 'София, България — EU' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-4">

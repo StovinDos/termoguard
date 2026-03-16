@@ -5,6 +5,7 @@ import { ShoppingCart, Star, Shield, Zap, Check, Filter, ChevronDown } from 'luc
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCurrency, CURRENCIES } from '@/context/CurrencyContext';
+import { useAuthModal } from '@/context/AuthModalContext';
 
 const PRODUCTS = [
   { id: 1, name: 'TermoGuard Core',   tagline: 'Smart Home Essentials', price: 49.99,  originalPrice: 69.99,  badge: 'Best Seller', badgeColor: 'bg-cyan text-void',                                                       rating: 4.9, reviews: 1247, description: 'Perfect for home use. Monitor up to 3 rooms with 0.1° precision and real-time mobile alerts.', features: ['0.1° Accuracy', '1-Second Polling', 'Wi-Fi Enabled', 'Mobile App'],        color: 'cyan',      accentHex: '#00f5d4' },
@@ -53,12 +54,17 @@ function ProductCard({ product, index }) {
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
   const { format } = useCurrency();
+  const { openModal } = useAuthModal();
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
 
   const handleAdd = async () => {
     if (!isAuthenticated) {
-      navigate('/auth?redirect=/store');
+      // Open login modal inline — don't navigate away from store
+      openModal(() => {
+        // After successful login, add the item
+        addItem(product);
+      });
       return;
     }
     setAdding(true);

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
+import { AuthModalProvider } from '@/context/AuthModalContext';
 import Navbar from '@/components/layout/Navbar';
 import CartDrawer from '@/components/store/CartDrawer';
 
@@ -51,16 +52,9 @@ function AppRoutes() {
         <Route path="/auth"       element={<AuthPage />} />
         <Route path="/enterprise" element={<EnterprisePage />} />
         <Route path="/about"      element={<AboutPage />} />
+        <Route path="/store"      element={<StorePage />} />
 
         {/* Protected Routes (require login) */}
-        <Route
-          path="/store"
-          element={
-            <ProtectedRoute>
-              <StorePage />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/checkout"
           element={
@@ -82,7 +76,9 @@ export default function App() {
     <AuthProvider>
       <CurrencyProvider>
         <CartProvider>
-          <AppRoutes />
+          <AuthModalProvider>
+            <AppRoutes />
+          </AuthModalProvider>
         </CartProvider>
       </CurrencyProvider>
     </AuthProvider>
