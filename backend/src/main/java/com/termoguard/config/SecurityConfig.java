@@ -48,7 +48,7 @@ public class SecurityConfig {
 
     // ── Password Encoder ─────────────────────────────────────────────────
 
-    @Bean
+    @Configuration
     public PasswordEncoder passwordEncoder() {
         // BCrypt with strength 12 — good balance of security vs CPU cost
         return new BCryptPasswordEncoder(12);
