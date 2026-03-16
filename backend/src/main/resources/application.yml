@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: termoguard-api
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/termoguard}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+
+  jpa:
+    hibernate:
+      ddl-auto: update          # Use 'validate' in production + Flyway
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: public
+
+  # Optional: Jackson config
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# ── JWT ───────────────────────────────────────────────────────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:TermoGuardSuperSecretKey2024MustBe256BitsOrMoreForHS256Algorithm!!}
+    expiration: ${JWT_EXPIRATION:86400000}   # 24 hours in ms
+    refresh-expiration: 604800000            # 7 days in ms
+
+# ── CORS (allow Vite dev + GitHub Pages) ──────────────────────────────────
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:5173
+      - https://${GITHUB_PAGES_DOMAIN:your-org.github.io}
+
+# ── Logging ───────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.termoguard: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
