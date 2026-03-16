@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const navLinks = [
   { label: 'Product',    href: '/' },
-  { label: 'Store',      href: '/store',      protected: true },
+  { label: 'Store',      href: '/store' },
   { label: 'Enterprise', href: '/enterprise' },
+  { label: 'About Us',   href: '/enterprise#contact' },
 ];
 
 export default function Navbar() {
@@ -27,11 +28,7 @@ export default function Navbar() {
 
   const handleNavClick = (link) => {
     setMobileOpen(false);
-    if (link.protected && !isAuthenticated) {
-      navigate(`/auth?redirect=${link.href}`);
-    } else {
-      navigate(link.href);
-    }
+    navigate(link.href);
   };
 
   const handleLogout = () => {
@@ -64,9 +61,6 @@ export default function Navbar() {
                 className={`nav-link ${location.pathname === link.href ? 'active text-cyan' : ''}`}
               >
                 {link.label}
-                {link.protected && !isAuthenticated && (
-                  <span className="ml-1.5 text-[8px] text-ink-muted tracking-widest">[LOGIN]</span>
-                )}
               </button>
             </li>
           ))}

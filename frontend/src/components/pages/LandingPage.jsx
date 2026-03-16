@@ -153,18 +153,23 @@ function DevicePlaceholder() {
 }
 
 // ── Main Landing Page ──────────────────────────────────────────────────────
-const randomSensorValue = () => Math.floor(Math.random() * 401) + 100;
-
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  // ── Live data stream ──────────────────────────────────────────────────────
-  const [liveData, setLiveData] = useState(randomSensorValue);
+  // ── Live temperature stream ───────────────────────────────────────────────
+  const [liveTemp, setLiveTemp] = useState(() => parseFloat((Math.random() * 10 + 18).toFixed(1)));
+  const [tempPulse, setTempPulse] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setLiveData(randomSensorValue());
-    }, 2000);
+      setLiveTemp(prev => {
+        const delta = (Math.random() - 0.5);
+        const clamped = Math.max(-0.5, Math.min(0.5, delta));
+        return parseFloat(Math.max(18, Math.min(28, prev + clamped)).toFixed(1));
+      });
+      setTempPulse(true);
+      setTimeout(() => setTempPulse(false), 600);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -435,13 +440,13 @@ export default function LandingPage() {
                   <p className="font-mono text-[10px] text-ink-muted tracking-widest uppercase mb-1">Live Sensor Reading</p>
                   <div className="flex items-baseline gap-2">
                     <span
-                      id="live-data"
-                      className="font-display font-black text-3xl text-cyan"
-                      style={{ textShadow: '0 0 20px rgba(0,245,212,0.6)' }}
+                      id="temp-display"
+                      className={`font-display font-black text-3xl text-cyan transition-all duration-300 ${tempPulse ? 'scale-110 text-glow-cyan' : ''}`}
+                      style={{ textShadow: '0 0 20px rgba(0,245,212,0.6)', display: 'inline-block' }}
                     >
-                      {liveData}
+                      {liveTemp}
                     </span>
-                    <span className="font-mono text-xs text-ink-muted">mV</span>
+                    <span className="font-mono text-xs text-ink-muted">°C</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
