@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
+import { CurrencyProvider } from '@/context/CurrencyContext';
 import Navbar from '@/components/layout/Navbar';
 import CartDrawer from '@/components/store/CartDrawer';
 
@@ -70,9 +71,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <AppRoutes />
-      </CartProvider>
+      <CurrencyProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </CurrencyProvider>
     </AuthProvider>
   );
 }
