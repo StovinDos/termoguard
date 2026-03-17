@@ -1,5 +1,5 @@
 server:
-  port: 5432
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -40,7 +40,7 @@ app:
 
 # ── CORS — inline list so it is always resolved ───────────────────────────
   cors:
-    allowed-origins: "http://localhost:3000,http://localhost:5173,https://stovindos.github.io"
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://stovindos.github.io}
 
 # ── Logging ───────────────────────────────────────────────────────────────
 logging:
