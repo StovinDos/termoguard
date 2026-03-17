@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Lock, Save, Package, Calendar,
@@ -93,7 +93,7 @@ function Section({ title, icon: Icon, children, delay = 0 }) {
 
 // ── Main Account Page ──────────────────────────────────────────────────────
 export default function AccountPage() {
-  const { user, demoMode, logout } = useAuth();
+  const { user, demoMode, logout, updateUser } = useAuth();
 
   // Profile form state
   const [profile, setProfile] = useState({
@@ -103,6 +103,17 @@ export default function AccountPage() {
   });
   const [profileErrors, setProfileErrors] = useState({});
   const [profileSaving, setProfileSaving] = useState(false);
+
+  // Sync profile form whenever the authenticated user data changes
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        firstName: user.firstName || '',
+        lastName:  user.lastName  || '',
+        email:     user.email     || '',
+      });
+    }
+  }, [user]);
 
   // Password form state
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
@@ -131,9 +142,12 @@ export default function AccountPage() {
     setProfileSaving(true);
     try {
       if (!demoMode) {
-        await api.put('/users/profile', profile);
+        const { data } = await api.put('/users/profile', profile);
+        updateUser(data);
+      } else {
+        await new Promise(r => setTimeout(r, 600)); // UX delay for demo
+        updateUser({ firstName: profile.firstName, lastName: profile.lastName, email: profile.email });
       }
-      await new Promise(r => setTimeout(r, 600)); // UX delay for demo
       toast.success('Profile updated successfully');
       setProfileErrors({});
     } catch {
