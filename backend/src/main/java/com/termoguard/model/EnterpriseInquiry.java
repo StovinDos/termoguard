@@ -63,8 +63,13 @@ public class EnterpriseInquiry {
     private InquiryStatus status = InquiryStatus.NEW;
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
     private Instant createdAt;
+
+    @jakarta.persistence.PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = Instant.now();
+    }
 
     public enum InquiryStatus {
         NEW, CONTACTED, IN_PROGRESS, CLOSED

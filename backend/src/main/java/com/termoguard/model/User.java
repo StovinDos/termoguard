@@ -64,12 +64,23 @@ public class User {
     private boolean emailVerified = false;
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
     private Instant createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
     private Instant updatedAt;
+
+    @jakarta.persistence.PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = Instant.now();
+        if (updatedAt == null) updatedAt = Instant.now();
+    }
+
+    @jakarta.persistence.PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
     // ── Convenience ──────────────────────────────────────────────────────
     public String getFullName() {
