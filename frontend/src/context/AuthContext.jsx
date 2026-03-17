@@ -108,16 +108,11 @@ export function AuthProvider({ children }) {
     setDemoMode(false);
   }, []);
 
-  const updateUser = useCallback((updatedData) => {
-    setUser(prev => ({ ...prev, ...updatedData }));
-  }, []);
-
   return (
     <AuthContext.Provider value={{
       user, loading, login, register, logout,
       isAuthenticated: !!user,
       demoMode,
-      updateUser,
     }}>
       {children}
     </AuthContext.Provider>

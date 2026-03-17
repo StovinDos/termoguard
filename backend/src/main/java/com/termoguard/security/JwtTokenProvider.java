@@ -2,7 +2,6 @@ package com.termoguard.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -89,7 +88,7 @@ public class JwtTokenProvider {
             log.warn("JWT expired: {}", ex.getMessage());
         } catch (MalformedJwtException ex) {
             log.warn("Malformed JWT: {}", ex.getMessage());
-        } catch (SignatureException ex) {
+        } catch (SecurityException ex) {
             log.warn("Invalid JWT signature: {}", ex.getMessage());
         } catch (IllegalArgumentException ex) {
             log.warn("JWT claims string is empty: {}", ex.getMessage());

@@ -99,10 +99,6 @@ public class SecurityConfig {
             // Disable CSRF — not needed for stateless REST + JWT
             .csrf(AbstractHttpConfigurer::disable)
 
-            // Disable form-login and HTTP-Basic — this is a JWT-only REST API
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-
             // Apply CORS config defined above
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 

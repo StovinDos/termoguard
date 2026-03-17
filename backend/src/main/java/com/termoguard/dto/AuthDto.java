@@ -68,12 +68,11 @@ public class AuthDto {
     @Builder
     @AllArgsConstructor
     public static class UserDto {
-        private Long      id;
-        private String    firstName;
-        private String    lastName;
-        private String    email;
+        private Long   id;
+        private String firstName;
+        private String lastName;
+        private String email;
         private User.Role role;
-        private java.time.Instant createdAt;
 
         /** Map entity → DTO */
         public static UserDto from(User user) {
@@ -83,47 +82,8 @@ public class AuthDto {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .createdAt(user.getCreatedAt())
                 .build();
         }
-    }
-
-    // ── Update Profile Request ────────────────────────────────────────────
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UpdateProfileRequest {
-
-        @NotBlank(message = "First name is required")
-        @Size(max = 80)
-        private String firstName;
-
-        @NotBlank(message = "Last name is required")
-        @Size(max = 80)
-        private String lastName;
-
-        @NotBlank(message = "Email is required")
-        @Email(message = "Invalid email address")
-        @Size(max = 255)
-        private String email;
-    }
-
-    // ── Change Password Request ───────────────────────────────────────────
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ChangePasswordRequest {
-
-        @NotBlank(message = "Current password is required")
-        private String currentPassword;
-
-        @NotBlank(message = "New password is required")
-        @Size(min = 8, max = 128, message = "New password must be 8–128 characters")
-        private String newPassword;
     }
 
     // ── Generic error response ────────────────────────────────────────────
