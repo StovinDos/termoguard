@@ -36,7 +36,11 @@ jobs:
 
       - name: Build
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          # Use an absolute URL (with https://) so the browser never treats it
+          # as a relative path.  When this was stored as a secret without the
+          # scheme, GitHub Pages resolved it relative to the page origin and
+          # produced URLs like https://stovindos.github.io/termoguard/<host>/…
+          VITE_API_BASE_URL: https://termoguard-production.up.railway.app/api
           VITE_BASE_PATH: ${{ secrets.VITE_BASE_PATH }}
         run: npm run build
 
