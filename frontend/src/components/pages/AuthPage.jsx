@@ -1,12 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, AlertCircle, WifiOff } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { useAuth } from '@/context/AuthContext';
-import { isKnownProviderEmail } from '@/utils/emailValidation';
-
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 function InputGroup({ label, icon: Icon, type = 'text', value, onChange, placeholder, error, suffix }) {
   const [showPass, setShowPass] = useState(false);
@@ -115,19 +111,15 @@ function RegisterForm({ onSuccess }) {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
 
   const validate = () => {
     const e = {};
     if (!form.firstName)  e.firstName = 'Required';
     if (!form.lastName)   e.lastName  = 'Required';
     if (!form.email)      e.email     = 'Email is required';
-    else if (!isKnownProviderEmail(form.email))
-      e.email = 'Please use a Gmail, Yahoo, Outlook, or iCloud address';
+    if (!/.+@.+\..+/.test(form.email)) e.email = 'Invalid email';
     if (form.password.length < 8) e.password = 'Minimum 8 characters';
     if (form.password !== form.confirm) e.confirm = 'Passwords do not match';
-    if (RECAPTCHA_SITE_KEY && !captchaToken) e.captcha = 'Please complete the CAPTCHA';
     return e;
   };
 
@@ -142,8 +134,6 @@ function RegisterForm({ onSuccess }) {
       onSuccess();
     } catch (err) {
       setServerError(err.message);
-      recaptchaRef.current?.reset();
-      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -173,22 +163,6 @@ function RegisterForm({ onSuccess }) {
       <p className="font-mono text-[10px] text-ink-muted leading-relaxed">
         By registering, you agree to our Terms of Service and Privacy Policy.
       </p>
-      {RECAPTCHA_SITE_KEY && (
-        <div>
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={RECAPTCHA_SITE_KEY}
-            theme="dark"
-            onChange={setCaptchaToken}
-            onExpired={() => setCaptchaToken(null)}
-          />
-          {errors.captcha && (
-            <p className="flex items-center gap-1.5 mt-1.5 font-mono text-[10px] text-neon-red">
-              <AlertCircle size={11} /> {errors.captcha}
-            </p>
-          )}
-        </div>
-      )}
       <button
         type="submit"
         disabled={loading}

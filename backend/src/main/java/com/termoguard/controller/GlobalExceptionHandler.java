@@ -1,7 +1,6 @@
 package com.termoguard.controller;
 
 import com.termoguard.dto.AuthDto.ErrorResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -54,10 +53,8 @@ public class GlobalExceptionHandler {
     // ── 500: Catch-all ─────────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
-        log.error("Unhandled exception on {} {} — {}: {}",
-            request.getMethod(), request.getRequestURI(),
-            ex.getClass().getName(), ex.getMessage(), ex);
+    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        log.error("Unhandled exception", ex);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 

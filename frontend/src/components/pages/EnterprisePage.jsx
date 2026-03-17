@@ -1,16 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Building2, Factory, Users, Package, Mail, Phone,
   Globe, ChevronRight, Shield, Zap, BarChart2, Check,
   AlertCircle, Send
 } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import api from '@/utils/api';
 import toast from 'react-hot-toast';
-import { isKnownProviderEmail } from '@/utils/emailValidation';
-
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 const INDUSTRIES = [
   'Manufacturing', 'Food & Beverage', 'Pharmaceuticals', 'Data Centers',
@@ -71,21 +67,17 @@ export default function EnterprisePage() {
   const [errors,    setErrors]    = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
   const validate = () => {
     const e = {};
-    if (!form.companyName)  e.companyName  = 'Required';
-    if (!form.contactName)  e.contactName  = 'Required';
-    if (!form.email || !isKnownProviderEmail(form.email))
-      e.email = 'Please use a Gmail, Yahoo, Outlook, or iCloud address';
-    if (!form.industry)     e.industry     = 'Required';
-    if (!form.facilitySize) e.facilitySize = 'Required';
-    if (!form.estimatedVolume) e.estimatedVolume = 'Required';
-    if (RECAPTCHA_SITE_KEY && !captchaToken) e.captcha = 'Please complete the CAPTCHA';
+    if (!form.companyName)      e.companyName      = 'Required';
+    if (!form.contactName)      e.contactName      = 'Required';
+    if (!form.email || !/.+@.+\..+/.test(form.email)) e.email = 'Valid email required';
+    if (!form.industry)         e.industry         = 'Required';
+    if (!form.facilitySize)     e.facilitySize     = 'Required';
+    if (!form.estimatedVolume)  e.estimatedVolume  = 'Required';
     return e;
   };
 
@@ -104,8 +96,6 @@ export default function EnterprisePage() {
       toast.success('Inquiry received. Our team will be in touch soon.');
     } finally {
       setLoading(false);
-      recaptchaRef.current?.reset();
-      setCaptchaToken(null);
     }
   };
 
@@ -500,24 +490,6 @@ export default function EnterprisePage() {
                   Your data is handled in accordance with our Privacy Policy and GDPR regulations.
                 </p>
               </div>
-
-              {/* CAPTCHA */}
-              {RECAPTCHA_SITE_KEY && (
-                <div>
-                  <ReCAPTCHA
-                    ref={recaptchaRef}
-                    sitekey={RECAPTCHA_SITE_KEY}
-                    theme="dark"
-                    onChange={setCaptchaToken}
-                    onExpired={() => setCaptchaToken(null)}
-                  />
-                  {errors.captcha && (
-                    <p className="font-mono text-[10px] text-neon-red mt-1.5 flex items-center gap-1">
-                      <AlertCircle size={10}/>{errors.captcha}
-                    </p>
-                  )}
-                </div>
-              )}
 
               <button
                 type="submit"
