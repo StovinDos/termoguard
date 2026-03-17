@@ -26,26 +26,19 @@ const STATUS_COLORS = {
 // ── Stat card ─────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, accent = 'cyan' }) {
   const colors = {
-    cyan:   'text-cyan  border-cyan/20  bg-cyan/5',
-    green:  'text-neon-green border-neon-green/20 bg-neon-green/5',
-    amber:  'text-neon-amber border-neon-amber/20 bg-neon-amber/5',
-    violet: 'text-violet-400 border-violet-400/20 bg-violet-400/5',
-  };
-  const textColors = {
-    cyan:   'text-cyan',
-    green:  'text-neon-green',
-    amber:  'text-neon-amber',
-    violet: 'text-violet-400',
+    cyan:  'text-cyan  border-cyan/20  bg-cyan/5',
+    green: 'text-neon-green border-neon-green/20 bg-neon-green/5',
+    amber: 'text-neon-amber border-neon-amber/20 bg-neon-amber/5',
   };
   return (
     <div className={`glass p-5 border ${colors[accent]}`}>
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-8 h-8 border flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>
-          <Icon size={15} className={textColors[accent]} />
+          <Icon size={15} className={accent === 'cyan' ? 'text-cyan' : accent === 'green' ? 'text-neon-green' : 'text-neon-amber'} />
         </div>
         <span className="font-mono text-[10px] text-ink-muted tracking-widest uppercase">{label}</span>
       </div>
-      <div className={`font-display font-black text-2xl ${textColors[accent]}`}
+      <div className={`font-display font-black text-2xl ${accent === 'cyan' ? 'text-cyan' : accent === 'green' ? 'text-neon-green' : 'text-neon-amber'}`}
            style={{ textShadow: accent === 'cyan' ? '0 0 16px rgba(0,245,212,0.4)' : 'none' }}>
         {value}
       </div>
@@ -131,14 +124,12 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'details'
 
   // ── Derived stats ────────────────────────────────────────────────────────
-  const totalOrders   = new Set(MOCK_ORDERS.map(o => o.id)).size;
-  const totalSpentNum = MOCK_ORDERS.reduce((s, o) => s + o.total, 0);
-  const totalSpent    = totalSpentNum.toFixed(2);
+  const totalSpent    = MOCK_ORDERS.reduce((s, o) => s + o.total, 0).toFixed(2);
   const memberSince   = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
     : 'Mar 2026';
-  const accountTier   = totalSpentNum >= 600 ? 'Platinum' : totalSpentNum >= 300 ? 'Gold' : totalSpentNum >= 100 ? 'Silver' : 'Bronze';
-  const tierColor     = accountTier === 'Platinum' ? 'violet' : accountTier === 'Gold' ? 'amber' : accountTier === 'Silver' ? 'cyan' : 'green';
+  const accountTier   = MOCK_ORDERS.length >= 4 ? 'Gold' : MOCK_ORDERS.length >= 2 ? 'Silver' : 'Bronze';
+  const tierColor     = accountTier === 'Gold' ? 'amber' : accountTier === 'Silver' ? 'cyan' : 'green';
 
   // ── Save profile ─────────────────────────────────────────────────────────
   const handleSaveProfile = async (e) => {
@@ -239,7 +230,7 @@ export default function AccountPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
                     className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Calendar}    label="Member Since"   value={memberSince}                          accent="cyan"  />
-          <StatCard icon={Package}     label="Total Orders"   value={totalOrders}                           accent="cyan"  />
+          <StatCard icon={Package}     label="Total Orders"   value={MOCK_ORDERS.length}                    accent="cyan"  />
           <StatCard icon={ShoppingBag} label="Total Spent"    value={`$${totalSpent}`}                     accent="amber" />
           <StatCard icon={Award}       label="Account Tier"   value={accountTier}                          accent={tierColor} />
         </motion.div>
