@@ -119,4 +119,57 @@ public class AuthService {
             .orElseThrow(() -> new IllegalStateException("User not found: " + email));
         return UserDto.from(user);
     }
+
+    // ── Update Profile ────────────────────────────────────────────────────
+
+    /**
+     * Updates a user's first name, last name, and email address.
+     *
+     * @throws IllegalArgumentException if the new email is already taken by another account
+     */
+    @Transactional
+    public UserDto updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+            .orElseThrow(() -> new IllegalStateException("User not found: " + email));
+
+        // Guard: reject new email if already taken by a *different* account
+        String newEmail = request.getEmail().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(newEmail) &&
+                userRepository.existsByEmailIgnoreCase(newEmail)) {
+            throw new IllegalArgumentException(
+                "An account with email '" + request.getEmail() + "' already exists.");
+        }
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(newEmail);
+
+        user = userRepository.save(user);
+        log.info("Profile updated: id={} email={}", user.getId(), user.getEmail());
+
+        return UserDto.from(user);
+    }
+
+    // ── Change Password ───────────────────────────────────────────────────
+
+    /**
+     * Changes a user's password after verifying the current one.
+     *
+     * @throws BadCredentialsException if currentPassword does not match the stored hash
+     */
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+            .orElseThrow(() -> new IllegalStateException("User not found: " + email));
+
+        // Verify that the supplied current password matches the stored BCrypt hash
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        // Hash the new password and persist
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Password changed: id={} email={}", user.getId(), user.getEmail());
+    }
 }
