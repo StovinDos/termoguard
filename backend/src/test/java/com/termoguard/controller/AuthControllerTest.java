@@ -1,27 +1,35 @@
 package com.termoguard.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.termoguard.config.SecurityConfig;
 import com.termoguard.dto.AuthDto.*;
+import com.termoguard.security.JwtTokenProvider;
 import com.termoguard.service.AuthService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
+@Import(SecurityConfig.class)
 class AuthControllerTest {
 
-    @Autowired MockMvc       mvc;
-    @Autowired ObjectMapper  mapper;
-    @MockBean  AuthService   authService;
+    @Autowired MockMvc            mvc;
+    @Autowired ObjectMapper       mapper;
+    @MockBean  AuthService        authService;
+    @MockBean  JwtTokenProvider   jwtTokenProvider;
+    @MockBean  UserDetailsService userDetailsService;
 
     private final UserDto mockUser = UserDto.builder()
         .id(1L).firstName("Jane").lastName("Doe")
@@ -39,6 +47,7 @@ class AuthControllerTest {
         var body = new RegisterRequest("Jane", "Doe", "jane@example.com", "password123");
 
         mvc.perform(post("/api/auth/register")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(body)))
             .andExpect(status().isCreated())
@@ -51,6 +60,7 @@ class AuthControllerTest {
     void register_returns400_onMissingFields() throws Exception {
         // Send empty object — all required fields absent
         mvc.perform(post("/api/auth/register")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest());
@@ -62,6 +72,7 @@ class AuthControllerTest {
         var body = new RegisterRequest("Jane", "Doe", "jane@example.com", "short");
 
         mvc.perform(post("/api/auth/register")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(body)))
             .andExpect(status().isBadRequest());
@@ -79,6 +90,7 @@ class AuthControllerTest {
         var body = new LoginRequest("jane@example.com", "password123");
 
         mvc.perform(post("/api/auth/login")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(body)))
             .andExpect(status().isOk())
@@ -93,6 +105,7 @@ class AuthControllerTest {
         var body = new LoginRequest("jane@example.com", "wrongpass");
 
         mvc.perform(post("/api/auth/login")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(body)))
             .andExpect(status().isUnauthorized())

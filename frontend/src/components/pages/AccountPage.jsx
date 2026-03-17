@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Lock, Save, Package, Calendar,
@@ -26,19 +26,26 @@ const STATUS_COLORS = {
 // ── Stat card ─────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, accent = 'cyan' }) {
   const colors = {
-    cyan:  'text-cyan  border-cyan/20  bg-cyan/5',
-    green: 'text-neon-green border-neon-green/20 bg-neon-green/5',
-    amber: 'text-neon-amber border-neon-amber/20 bg-neon-amber/5',
+    cyan:   'text-cyan  border-cyan/20  bg-cyan/5',
+    green:  'text-neon-green border-neon-green/20 bg-neon-green/5',
+    amber:  'text-neon-amber border-neon-amber/20 bg-neon-amber/5',
+    violet: 'text-violet-400 border-violet-400/20 bg-violet-400/5',
+  };
+  const textColors = {
+    cyan:   'text-cyan',
+    green:  'text-neon-green',
+    amber:  'text-neon-amber',
+    violet: 'text-violet-400',
   };
   return (
     <div className={`glass p-5 border ${colors[accent]}`}>
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-8 h-8 border flex items-center justify-center flex-shrink-0 ${colors[accent]}`}>
-          <Icon size={15} className={accent === 'cyan' ? 'text-cyan' : accent === 'green' ? 'text-neon-green' : 'text-neon-amber'} />
+          <Icon size={15} className={textColors[accent]} />
         </div>
         <span className="font-mono text-[10px] text-ink-muted tracking-widest uppercase">{label}</span>
       </div>
-      <div className={`font-display font-black text-2xl ${accent === 'cyan' ? 'text-cyan' : accent === 'green' ? 'text-neon-green' : 'text-neon-amber'}`}
+      <div className={`font-display font-black text-2xl ${textColors[accent]}`}
            style={{ textShadow: accent === 'cyan' ? '0 0 16px rgba(0,245,212,0.4)' : 'none' }}>
         {value}
       </div>
@@ -93,7 +100,7 @@ function Section({ title, icon: Icon, children, delay = 0 }) {
 
 // ── Main Account Page ──────────────────────────────────────────────────────
 export default function AccountPage() {
-  const { user, demoMode, logout } = useAuth();
+  const { user, demoMode, logout, updateUser } = useAuth();
 
   // Profile form state
   const [profile, setProfile] = useState({
@@ -104,6 +111,17 @@ export default function AccountPage() {
   const [profileErrors, setProfileErrors] = useState({});
   const [profileSaving, setProfileSaving] = useState(false);
 
+  // Sync profile form whenever the authenticated user data changes
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        firstName: user.firstName || '',
+        lastName:  user.lastName  || '',
+        email:     user.email     || '',
+      });
+    }
+  }, [user]);
+
   // Password form state
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
   const [passErrors, setPassErrors] = useState({});
@@ -113,12 +131,14 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'details'
 
   // ── Derived stats ────────────────────────────────────────────────────────
-  const totalSpent    = MOCK_ORDERS.reduce((s, o) => s + o.total, 0).toFixed(2);
+  const totalOrders   = new Set(MOCK_ORDERS.map(o => o.id)).size;
+  const totalSpentNum = MOCK_ORDERS.reduce((s, o) => s + o.total, 0);
+  const totalSpent    = totalSpentNum.toFixed(2);
   const memberSince   = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
     : 'Mar 2026';
-  const accountTier   = MOCK_ORDERS.length >= 4 ? 'Gold' : MOCK_ORDERS.length >= 2 ? 'Silver' : 'Bronze';
-  const tierColor     = accountTier === 'Gold' ? 'amber' : accountTier === 'Silver' ? 'cyan' : 'green';
+  const accountTier   = totalSpentNum >= 600 ? 'Platinum' : totalSpentNum >= 300 ? 'Gold' : totalSpentNum >= 100 ? 'Silver' : 'Bronze';
+  const tierColor     = accountTier === 'Platinum' ? 'violet' : accountTier === 'Gold' ? 'amber' : accountTier === 'Silver' ? 'cyan' : 'green';
 
   // ── Save profile ─────────────────────────────────────────────────────────
   const handleSaveProfile = async (e) => {
@@ -131,9 +151,12 @@ export default function AccountPage() {
     setProfileSaving(true);
     try {
       if (!demoMode) {
-        await api.put('/users/profile', profile);
+        const { data } = await api.put('/users/profile', profile);
+        updateUser(data);
+      } else {
+        await new Promise(r => setTimeout(r, 600)); // UX delay for demo
+        updateUser({ firstName: profile.firstName, lastName: profile.lastName, email: profile.email });
       }
-      await new Promise(r => setTimeout(r, 600)); // UX delay for demo
       toast.success('Profile updated successfully');
       setProfileErrors({});
     } catch {
@@ -216,7 +239,7 @@ export default function AccountPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
                     className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Calendar}    label="Member Since"   value={memberSince}                          accent="cyan"  />
-          <StatCard icon={Package}     label="Total Orders"   value={MOCK_ORDERS.length}                    accent="cyan"  />
+          <StatCard icon={Package}     label="Total Orders"   value={totalOrders}                           accent="cyan"  />
           <StatCard icon={ShoppingBag} label="Total Spent"    value={`$${totalSpent}`}                     accent="amber" />
           <StatCard icon={Award}       label="Account Tier"   value={accountTier}                          accent={tierColor} />
         </motion.div>

@@ -1,8 +1,20 @@
 import axios from 'axios';
 
-// Points to your LOCAL Spring Boot server (only active when running on your laptop)
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
+// Ensure the base URL is absolute so it is never resolved relative to the
+// page origin (which would break deployments on GitHub Pages).
+// A value like "termoguard-production.up.railway.app/api" (missing the scheme)
+// is treated as a relative path by the browser and gets prepended with the
+// page's origin, producing the wrong URL.  Prepend "https://" when the value
+// is neither a relative path (starting with "/") nor already contains a scheme.
+const baseURL =
+  rawBaseUrl && !rawBaseUrl.startsWith('/') && !/^https?:\/\//i.test(rawBaseUrl)
+    ? `https://${rawBaseUrl}`
+    : rawBaseUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 5000,
 });
