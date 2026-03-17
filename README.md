@@ -1,5 +1,5 @@
 # TermoGuard — 
-
+      
 # &#x20;   Precision Thermal Intelligence Platform
 
 A full-stack e-commerce platform for the TermoGuard smart temperature sensor.
