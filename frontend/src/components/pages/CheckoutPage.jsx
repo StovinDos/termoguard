@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CreditCard, Lock, Check, ChevronLeft, AlertCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import api from '@/utils/api';
 import toast from 'react-hot-toast';
 
 function FormSection({ title, children }) {
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const [step, setStep]       = useState(1); // 1: info, 2: payment, 3: success
   const [loading, setLoading] = useState(false);
+  const [orderNumbers, setOrderNumbers] = useState([]);
 
   const [shipping, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', zip: '', country: 'US' });
   const [payment,  setPayment]  = useState({ cardNumber: '', cardName: '', expiry: '', cvv: '' });
@@ -59,11 +61,38 @@ export default function CheckoutPage() {
   const handleOrder = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulated API call — replace with real payment gateway
-    await new Promise(r => setTimeout(r, 1800));
-    setLoading(false);
-    setStep(3);
-    clearCart();
+
+    try {
+      const token = localStorage.getItem('tg_token');
+      if (!token) {
+        toast.error('Please log in to place an order');
+        navigate('/login');
+        return;
+      }
+
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      const orderPromises = items.map(item =>
+        api.post('/orders', {
+          productName: item.name,
+          quantity: item.quantity,
+          total: (item.price * item.quantity * 1.1).toFixed(2)
+        })
+      );
+
+      const responses = await Promise.all(orderPromises);
+      const createdOrderNumbers = responses.map(res => res.data.orderNumber);
+
+      setOrderNumbers(createdOrderNumbers);
+      setStep(3);
+      clearCart();
+      toast.success('Order placed successfully!');
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      toast.error(error.message || 'Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Success Screen ─────────────────────────────────────────────────────
@@ -86,8 +115,12 @@ export default function CheckoutPage() {
           <p className="font-mono text-[10px] text-ink-muted mb-8">
             A confirmation email has been dispatched to your registered address.
           </p>
-          <div className="border border-neon-green/20 bg-neon-green/5 p-4 mb-8 font-mono text-xs text-neon-green">
-            ORDER #TG-{Math.random().toString(36).substring(2, 10).toUpperCase()}
+          <div className="space-y-2 mb-8">
+            {orderNumbers.map((orderNum, index) => (
+              <div key={index} className="border border-neon-green/20 bg-neon-green/5 p-4 font-mono text-xs text-neon-green">
+                ORDER #{orderNum}
+              </div>
+            ))}
           </div>
           <button onClick={() => navigate('/')} className="btn-primary w-full">
             Back to Home

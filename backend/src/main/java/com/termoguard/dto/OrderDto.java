@@ -1,6 +1,9 @@
 package com.termoguard.dto;
 
 import com.termoguard.model.Order;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -10,6 +13,25 @@ import java.time.Instant;
  * Data Transfer Objects for Order-related endpoints.
  */
 public class OrderDto {
+
+    // ── Order Request DTO ────────────────────────────────────────────────
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderRequest {
+        @NotBlank(message = "Product name is required")
+        private String productName;
+
+        @NotNull(message = "Quantity is required")
+        @Positive(message = "Quantity must be positive")
+        private Integer quantity;
+
+        @NotNull(message = "Total is required")
+        @Positive(message = "Total must be positive")
+        private BigDecimal total;
+    }
 
     // ── Order Response DTO ────────────────────────────────────────────────
 
