@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,56 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    /**
+     * Create a new order for the authenticated user.
+     */
+    @Transactional
+    public OrderDto.OrderResponse createOrder(Long userId, OrderDto.OrderRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String orderNumber = generateUniqueOrderNumber();
+
+        Order order = Order.builder()
+            .user(user)
+            .orderNumber(orderNumber)
+            .productName(request.getProductName())
+            .quantity(request.getQuantity())
+            .total(request.getTotal())
+            .status(Order.OrderStatus.PROCESSING)
+            .build();
+
+        Order savedOrder = orderRepository.save(order);
+
+        updateCustomerRank(userId);
+
+        return OrderDto.OrderResponse.from(savedOrder);
+    }
+
+    /**
+     * Generate a unique order number in format TG-XXXXXX.
+     */
+    private String generateUniqueOrderNumber() {
+        String orderNumber;
+        do {
+            orderNumber = "TG-" + generateRandomAlphanumeric(6);
+        } while (orderRepository.existsByOrderNumber(orderNumber));
+        return orderNumber;
+    }
+
+    /**
+     * Generate a random alphanumeric string of specified length.
+     */
+    private String generateRandomAlphanumeric(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
 
     /**
      * Get all orders for the authenticated user.
