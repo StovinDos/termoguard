@@ -119,78 +119,28 @@ function StepCard({ icon: Icon, step, title, desc, detail, delay = 0 }) {
 
 // ── Live Data Stream — fluid ticker ───────────────────────────────────────
 function LiveDataStream() {
+  // Keep a rolling buffer of 12 readings; render top 8 visually
   const VISIBLE = 8;
-  const [rows, setRows]     = useState([]);
-  const [isLive, setIsLive] = useState(false);
-  const demoRef             = useRef(null);
-
-  // ── Demo mode: animated fake data ──
-  const startDemo = useCallback(() => {
-    const seed = Array.from({ length: 12 }, (_, i) => ({
+  const [rows, setRows] = useState(() =>
+    Array.from({ length: 12 }, (_, i) => ({
       id: i,
       time: new Date(Date.now() - (11 - i) * 1000),
       temp: +(20.5 + Math.sin(i * 0.8) * 2.5).toFixed(1),
-      humidity: +(55 + Math.sin(i * 0.5) * 5).toFixed(1),
-      status: 'Optimal',
-      demo: true,
-    }));
-    setRows(seed);
-
-    demoRef.current = setInterval(() => {
-      setRows(prev => {
-        const last = prev[prev.length - 1];
-        const drift = (Math.random() - 0.48) * 0.5;
-        const newTemp = +(Math.min(25.0, Math.max(18.0, last.temp + drift)).toFixed(1));
-        return [...prev.slice(1), {
-          id: Date.now(), time: new Date(),
-          temp: newTemp, humidity: last.humidity,
-          status: newTemp < 18 ? 'Cold' : newTemp <= 28 ? 'Optimal' : 'Too Hot',
-          demo: true,
-        }];
-      });
-    }, 1000);
-  }, []);
-
-  // ── Live mode: poll backend ──
-  const pollLive = useCallback(() => {
-    const poll = async () => {
-      try {
-        const res  = await fetch('/api/sensor/latest');
-        const data = await res.json();
-
-        if (data.live && data.history?.length > 0) {
-          if (demoRef.current) { clearInterval(demoRef.current); demoRef.current = null; }
-          setIsLive(true);
-          setRows(data.history.slice(-12).map((r, i) => ({
-            id: i,
-            time: new Date(r.timestamp),
-            temp: r.temperature,
-            humidity: r.humidity,
-            status: r.status,
-            demo: false,
-          })));
-        } else {
-          setIsLive(false);
-          if (!demoRef.current) startDemo();
-        }
-      } catch {
-        setIsLive(false);
-        if (!demoRef.current) startDemo();
-      }
-    };
-
-    poll();
-    return setInterval(poll, 2000);
-  }, [startDemo]);
+    }))
+  );
 
   useEffect(() => {
-    startDemo();
-    const liveInterval = pollLive();
-    return () => {
-      if (demoRef.current) clearInterval(demoRef.current);
-      clearInterval(liveInterval);
-    };
-  }, [startDemo, pollLive]);
+    const timer = setInterval(() => {
+      setRows(prev => {
+        const last = prev[prev.length - 1];
+        const drift = (Math.random() - 0.48) * 0.5; // slight upward bias
+        const newTemp = +(Math.min(25.0, Math.max(18.0, last.temp + drift)).toFixed(1));
+        const newRow = { id: Date.now(), time: new Date(), temp: newTemp };
+        return [...prev.slice(1), newRow];
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fmt = (d) =>
     d.toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -201,32 +151,30 @@ function LiveDataStream() {
     <div className="glass clip-corner relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-25 pointer-events-none" />
 
+      {/* Header bar */}
       <div className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-[rgba(0,245,212,0.1)]">
         <span className="font-mono text-[10px] text-ink-muted tracking-widest uppercase">Live Feed</span>
         <div className="flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isLive ? 'bg-neon-green' : 'bg-neon-amber'}`}
-               style={{ boxShadow: isLive ? '0 0 6px rgba(57,255,20,0.8)' : '0 0 6px rgba(255,183,0,0.8)' }} />
-          <span className={`font-mono text-[10px] tracking-widest ${isLive ? 'text-neon-green' : 'text-neon-amber'}`}>
-            {isLive ? 'LIVE · ESP32' : 'DEMO · simulated'}
-          </span>
+          <div className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse"
+               style={{ boxShadow: '0 0 6px rgba(57,255,20,0.8)' }} />
+          <span className="font-mono text-[10px] text-neon-green tracking-widest">ACTIVE · 1s poll</span>
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center px-6 py-2 border-b border-[rgba(0,245,212,0.06)]">
+      {/* Column headers */}
+      <div className="relative z-10 flex items-center gap-0 px-6 py-2 border-b border-[rgba(0,245,212,0.06)]">
         <span className="font-mono text-[9px] text-ink-muted tracking-widest uppercase w-24 flex-shrink-0">Timestamp</span>
         <div className="flex-1" />
         <span className="font-mono text-[9px] text-ink-muted tracking-widest uppercase w-16 text-right flex-shrink-0">Temp</span>
-        <span className="font-mono text-[9px] text-ink-muted tracking-widest uppercase w-16 text-right flex-shrink-0">Status</span>
+        <span className="font-mono text-[9px] text-ink-muted tracking-widest uppercase w-6 text-right flex-shrink-0 ml-2">ST</span>
       </div>
 
+      {/* Rows */}
       <div className="relative z-10 overflow-hidden" style={{ height: `${VISIBLE * 44}px` }}>
         <AnimatePresence initial={false}>
           {visible.map((row, i) => {
             const isLatest = i === visible.length - 1;
-            const opacity  = 0.35 + (i / (VISIBLE - 1)) * 0.65;
-            const statusColor = row.status === 'Too Hot' ? '#E24B4A'
-                              : row.status === 'Cold'    ? '#378ADD'
-                              : '#39ff14';
+            const opacity = 0.35 + (i / (VISIBLE - 1)) * 0.65;
             return (
               <motion.div
                 key={row.id}
@@ -234,26 +182,36 @@ function LiveDataStream() {
                 animate={{ opacity, y: 0 }}
                 exit={{ opacity: 0, y: 44 }}
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute left-0 right-0 flex items-center px-6"
+                className="absolute left-0 right-0 flex items-center gap-0 px-6"
                 style={{ height: 44, top: `${i * 44}px` }}
               >
-                <span className="font-mono text-[11px] text-ink-muted w-24 flex-shrink-0">{fmt(row.time)}</span>
+                {/* Timestamp */}
+                <span className="font-mono text-[11px] text-ink-muted w-24 flex-shrink-0 leading-none">
+                  {fmt(row.time)}
+                </span>
+
+                {/* Separator line */}
                 <div className="flex-1 mx-3 h-px"
                      style={{ background: `linear-gradient(to right, rgba(0,245,212,${isLatest ? 0.3 : 0.1}), transparent)` }} />
-                <span className={`font-mono text-sm font-bold w-16 text-right flex-shrink-0 tabular-nums ${isLatest ? 'text-cyan' : 'text-ink-secondary'}`}
+
+                {/* Temperature */}
+                <span className={`font-mono text-sm font-bold w-16 text-right flex-shrink-0 leading-none tabular-nums
+                                  ${isLatest ? 'text-cyan' : 'text-ink-secondary'}`}
                       style={isLatest ? { textShadow: '0 0 10px rgba(0,245,212,0.6)' } : {}}>
-                  {row.temp.toFixed(1)}°C
+                  {row.temp}°C
                 </span>
-                <span className="font-mono text-[10px] w-16 text-right flex-shrink-0"
-                      style={{ color: isLatest ? statusColor : 'var(--ink-muted)' }}>
-                  {row.status}
-                </span>
+
+                {/* Status dot */}
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-3
+                                 ${isLatest ? 'bg-neon-green' : 'bg-ink-muted/25'}`}
+                     style={isLatest ? { boxShadow: '0 0 6px rgba(57,255,20,0.8)', animation: 'pulse 2s ease-in-out infinite' } : {}} />
               </motion.div>
             );
           })}
         </AnimatePresence>
       </div>
 
+      {/* Fade out bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none z-20"
            style={{ background: 'linear-gradient(to top, rgba(13,20,32,0.9) 0%, transparent 100%)' }} />
     </div>
