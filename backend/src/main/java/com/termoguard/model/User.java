@@ -63,11 +63,6 @@ public class User {
     @Builder.Default
     private boolean emailVerified = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "customer_rank", length = 20)
-    @Builder.Default
-    private CustomerRank customerRank = CustomerRank.BRONZE;
-
     @CreatedDate
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
     private Instant createdAt;
@@ -96,12 +91,5 @@ public class User {
         CUSTOMER,
         ENTERPRISE,
         ADMIN
-    }
-
-    public enum CustomerRank {
-        BRONZE,
-        SILVER,
-        GOLD,
-        PLATINUM
     }
 }

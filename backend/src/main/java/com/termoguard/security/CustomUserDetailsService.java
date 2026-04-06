@@ -34,16 +34,4 @@ public class CustomUserDetailsService implements UserDetailsService {
             .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())))
             .build();
     }
-
-    /**
-     * Get the user ID from an email address.
-     * Used to retrieve the authenticated user's ID for API operations.
-     */
-    @Transactional(readOnly = true)
-    public Long getUserIdFromEmail(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-            .orElseThrow(() ->
-                new UsernameNotFoundException("No user found with email: " + email));
-        return user.getId();
-    }
 }

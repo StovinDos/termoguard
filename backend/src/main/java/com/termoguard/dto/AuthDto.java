@@ -73,7 +73,6 @@ public class AuthDto {
         private String    lastName;
         private String    email;
         private User.Role role;
-        private String    customerRank;
         private java.time.Instant createdAt;
 
         /** Map entity → DTO */
@@ -84,7 +83,6 @@ public class AuthDto {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .customerRank(user.getCustomerRank() != null ? user.getCustomerRank().name() : "BRONZE")
                 .createdAt(user.getCreatedAt())
                 .build();
         }
