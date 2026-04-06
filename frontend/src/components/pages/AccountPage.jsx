@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/utils/api';
 import toast from 'react-hot-toast';
 
-// ── Mock order history ────────────────────────────────────────────────────
+// ── Mock order history (fallback for demo mode) ──────────────────────────
 const MOCK_ORDERS = [
   { id: 'TG-A8F2C1', date: '2026-02-14', product: 'TermoGuard Core',   qty: 1, total: 49.99,  status: 'Delivered' },
   { id: 'TG-B3D7E9', date: '2026-01-28', product: 'TermoGuard Pro',    qty: 2, total: 239.98, status: 'Delivered' },
@@ -102,6 +102,10 @@ function Section({ title, icon: Icon, children, delay = 0 }) {
 export default function AccountPage() {
   const { user, demoMode, logout, updateUser } = useAuth();
 
+  // Order state
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
   // Profile form state
   const [profile, setProfile] = useState({
     firstName: user?.firstName || '',
@@ -122,6 +126,41 @@ export default function AccountPage() {
     }
   }, [user]);
 
+  // Fetch user orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (demoMode) {
+        // Use mock data in demo mode
+        setOrders(MOCK_ORDERS);
+        setOrdersLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await api.get('/orders');
+        // Transform backend response to match frontend format
+        const transformedOrders = data.map(order => ({
+          id: order.orderNumber,
+          date: order.createdAt,
+          product: order.productName,
+          qty: order.quantity,
+          total: parseFloat(order.total),
+          status: order.status === 'DELIVERED' ? 'Delivered' :
+                  order.status === 'SHIPPED' ? 'Shipped' : 'Processing',
+        }));
+        setOrders(transformedOrders);
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+        // Fall back to mock orders on error
+        setOrders(MOCK_ORDERS);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [demoMode]);
+
   // Password form state
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
   const [passErrors, setPassErrors] = useState({});
@@ -131,14 +170,16 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'details'
 
   // ── Derived stats ────────────────────────────────────────────────────────
-  const totalOrders   = new Set(MOCK_ORDERS.map(o => o.id)).size;
-  const totalSpentNum = MOCK_ORDERS.reduce((s, o) => s + o.total, 0);
+  const totalOrders   = new Set(orders.map(o => o.id)).size;
+  const totalSpentNum = orders.reduce((s, o) => s + o.total, 0);
   const totalSpent    = totalSpentNum.toFixed(2);
   const memberSince   = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
     : 'Mar 2026';
-  const accountTier   = totalSpentNum >= 600 ? 'Platinum' : totalSpentNum >= 300 ? 'Gold' : totalSpentNum >= 100 ? 'Silver' : 'Bronze';
-  const tierColor     = accountTier === 'Platinum' ? 'violet' : accountTier === 'Gold' ? 'amber' : accountTier === 'Silver' ? 'cyan' : 'green';
+  // Use customer rank from user object if available, otherwise calculate from total spent
+  const accountTier   = user?.customerRank ||
+    (totalSpentNum >= 600 ? 'PLATINUM' : totalSpentNum >= 300 ? 'GOLD' : totalSpentNum >= 100 ? 'SILVER' : 'BRONZE');
+  const tierColor     = accountTier === 'PLATINUM' ? 'violet' : accountTier === 'GOLD' ? 'amber' : accountTier === 'SILVER' ? 'cyan' : 'green';
 
   // ── Save profile ─────────────────────────────────────────────────────────
   const handleSaveProfile = async (e) => {
@@ -323,42 +364,52 @@ export default function AccountPage() {
 
           {/* Right — Order history */}
           <Section title="Order History" icon={Package} delay={0.25}>
-            <div className="space-y-3">
-              {MOCK_ORDERS.map((order, i) => (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.07, duration: 0.4 }}
-                  className="border border-[rgba(0,245,212,0.08)] bg-deep/40 p-4 hover:border-cyan/20 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div>
-                      <p className="font-display font-semibold text-xs text-ink-primary">{order.product}</p>
-                      <p className="font-mono text-[10px] text-ink-muted mt-0.5">#{order.id}</p>
-                    </div>
-                    <span className={`font-mono text-[9px] tracking-widest uppercase px-2 py-1 border flex-shrink-0 ${STATUS_COLORS[order.status]}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-[10px] text-ink-muted">
-                        {new Date(order.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                      <span className="font-mono text-[10px] text-ink-muted">Qty: {order.qty}</span>
-                    </div>
-                    <span className="font-display font-bold text-sm text-cyan">${order.total.toFixed(2)}</span>
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Total */}
-              <div className="border-t border-[rgba(0,245,212,0.1)] pt-4 flex justify-between items-center mt-2">
-                <span className="font-mono text-xs text-ink-muted tracking-widest uppercase">Total Spent</span>
-                <span className="font-display font-black text-lg text-cyan">${totalSpent}</span>
+            {ordersLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-cyan/30 border-t-cyan rounded-full animate-spin" />
               </div>
-            </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-8 text-ink-muted font-mono text-xs">
+                No orders yet
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((order, i) => (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.07, duration: 0.4 }}
+                    className="border border-[rgba(0,245,212,0.08)] bg-deep/40 p-4 hover:border-cyan/20 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <p className="font-display font-semibold text-xs text-ink-primary">{order.product}</p>
+                        <p className="font-mono text-[10px] text-ink-muted mt-0.5">#{order.id}</p>
+                      </div>
+                      <span className={`font-mono text-[9px] tracking-widest uppercase px-2 py-1 border flex-shrink-0 ${STATUS_COLORS[order.status]}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[10px] text-ink-muted">
+                          {new Date(order.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                        <span className="font-mono text-[10px] text-ink-muted">Qty: {order.qty}</span>
+                      </div>
+                      <span className="font-display font-bold text-sm text-cyan">${order.total.toFixed(2)}</span>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {/* Total */}
+                <div className="border-t border-[rgba(0,245,212,0.1)] pt-4 flex justify-between items-center mt-2">
+                  <span className="font-mono text-xs text-ink-muted tracking-widest uppercase">Total Spent</span>
+                  <span className="font-display font-black text-lg text-cyan">${totalSpent}</span>
+                </div>
+              </div>
+            )}
           </Section>
         </div>
       </div>
