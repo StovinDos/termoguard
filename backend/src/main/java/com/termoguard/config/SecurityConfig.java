@@ -117,6 +117,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/enterprise/inquiry").permitAll()
                 .requestMatchers(HttpMethod.GET,  "/api/products/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/sensor/**").permitAll()
 
                 // ── Protected routes (require valid JWT) ─────────────────
                 .requestMatchers("/api/users/**").authenticated()
